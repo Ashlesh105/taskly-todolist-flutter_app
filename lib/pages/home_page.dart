@@ -3,6 +3,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:taskly_app/models/task.dart';
 
 class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
   @override
   State<StatefulWidget> createState() {
     return _HomePageState();
@@ -10,15 +12,14 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  late double _deviceHeight, _deviceWidth;
+  late double _deviceHeight;
   String? _newTaskValue;
   Box? _box;
 
   @override
   Widget build(BuildContext context) {
     _deviceHeight = MediaQuery.of(context).size.height;
-    _deviceWidth = MediaQuery.of(context).size.width;
-    print("Input Value: $_newTaskValue");
+    // print("Input Value: $_newTaskValue");
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.red,
@@ -36,9 +37,9 @@ class _HomePageState extends State<HomePage> {
   Widget _taskView() {
     return FutureBuilder(
         future: Hive.openBox('tasks'),
-        builder: (BuildContext _context, AsyncSnapshot _snapshot) {
-          if (_snapshot.hasData) {
-            _box = _snapshot.data;
+        builder: (BuildContext context, AsyncSnapshot snapshot) {
+          if (snapshot.hasData) {
+            _box = snapshot.data;
             return _taskList();
           } else {
             return Center(
@@ -51,24 +52,24 @@ class _HomePageState extends State<HomePage> {
   void _displayTaskPopUp() {
     showDialog(
         context: context,
-        builder: (BuildContext _context) {
+        builder: (BuildContext context) {
           return AlertDialog(
             title: Text("Add New Task!"),
             content: TextField(
               autofocus: true,
               decoration: InputDecoration(hintText: "Enter Task"),
-              onChanged: (_value) {
+              onChanged: (value) {
                 setState(() {
-                  _newTaskValue = _value;
+                  _newTaskValue = value;
                 });
               },
-              onSubmitted: (_value) {
+              onSubmitted: (value) {
                 if (_newTaskValue != null) {
-                  Task _newTask = Task(
+                  Task newTask = Task(
                       content: _newTaskValue!,
                       timeStamp: DateTime.now(),
                       done: false);
-                  _box?.add(_newTask.toMap());
+                  _box?.add(newTask.toMap());
                   Navigator.of(context).pop(); /**/
                 }
               },
@@ -88,10 +89,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _taskList() {
-    List _tasks = _box!.values.toList();
+    List tasks = _box!.values.toList();
     return ListView.builder(
-        itemBuilder: (BuildContext _context, int _index) {
-          var task = Task.fromMap(_tasks[_index]);
+        itemBuilder: (BuildContext context, int index) {
+          var task = Task.fromMap(tasks[index]);
           return ListTile(
             title: Text(
               task.content,
@@ -107,15 +108,15 @@ class _HomePageState extends State<HomePage> {
               setState(() {
                 task.done = !task.done;
               });
-              _box?.putAt(_index, task.toMap());
+              _box?.putAt(index, task.toMap());
             },
             onLongPress: (){
               setState(() {
-                _box?.deleteAt(_index);
+                _box?.deleteAt(index);
               });
             },
           );
         },
-        itemCount: _tasks.length);
+        itemCount: tasks.length);
   }
 }
